@@ -29,9 +29,22 @@
 		EE1F62E22CB6AEF800D5BF33 /* MapappUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = MapappUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		EE07936E2CCA73D200D72351 /* Exceptions for "Mapapp" folder in "Mapapp" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = EE1F62C72CB6AEF700D5BF33 /* Mapapp */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		EE1F62CA2CB6AEF700D5BF33 /* Mapapp */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				EE07936E2CCA73D200D72351 /* Exceptions for "Mapapp" folder in "Mapapp" target */,
+			);
 			path = Mapapp;
 			sourceTree = "<group>";
 		};
@@ -398,6 +411,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Mapapp/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Mapapp/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Show the user location.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -428,6 +442,7 @@
 				DEVELOPMENT_ASSET_PATHS = "\"Mapapp/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = Mapapp/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Show the user location.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

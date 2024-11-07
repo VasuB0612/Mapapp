@@ -1,15 +1,10 @@
-//
-//  Location.swift
-//  Mapapp
-//
-//  Created by Vasu Bhatnagar on 24.10.2024.
-//
-
+// Location.swift
 import Foundation
 import CoreLocation
 
 struct Location: Identifiable {
-    let id = UUID()
-    var coordinate: CLLocationCoordinate2D
+    var id = UUID()  // Conforms to Identifiable
     var name: String
+    var coordinate: CLLocationCoordinate2D
 }
+

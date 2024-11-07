@@ -11,7 +11,9 @@ import SwiftUI
 struct MapappApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            // Use the MapView representable to show your UIKit-based map view
+            MapView() // This uses your UIViewControllerRepresentable wrapper
         }
     }
 }
+

@@ -1,35 +1,28 @@
+//
+//  MapView.swift
+//  Mapapp
+//
+//  Created by Vasu Bhatnagar on 7.11.2024.
+//
+
 import SwiftUI
 import MapKit
 
-struct MapView: View {
-    @Binding var position: MapCameraPosition
-    @Binding var selectedLocations: [Location]
-    @Binding var selectedCoordinate: CLLocationCoordinate2D?
-
-    var body: some View {
-        // Use Map with the `MapCameraPosition` parameter
-        Map(position: $position, annotationItems: selectedLocations) { location in
-            // Use MapAnnotation to create custom annotations
-            MapAnnotation(coordinate: location.coordinate) {
-                // Customize the annotation with any SwiftUI view (e.g., an Image or Text)
-                VStack {
-                    Image(systemName: "star.fill")
-                        .foregroundColor(.yellow)
-                    Text(location.name)
-                        .font(.caption)
-                }
-            }
-        }
-        .mapControls {
-            // Add map controls like user location button and pitch toggle
-            MapUserLocationButton()
-            MapPitchToggle()
-        }
-        .onTapGesture {
-            // Capture the coordinates of the tap location
-            if let selectedCoordinate = self.selectedCoordinate {
-                print("User tapped at: \(selectedCoordinate.latitude), \(selectedCoordinate.longitude)")
-            }
-        }
+// 1. Define the MapView that conforms to UIViewControllerRepresentable
+struct MapView: UIViewControllerRepresentable {
+    
+    // 2. Create and return the ContentViewController in the makeUIViewController method
+    func makeUIViewController(context: Context) -> ContentViewController {
+        // Return an instance of your ContentViewController (not ContentView which is a SwiftUI View)
+        let locationManager = LocationManager()
+        
+        return ContentViewController(locationManager: locationManager)
+    }
+    
+    // 3. Implement updateUIViewController (no changes needed in this case)
+    func updateUIViewController(_ uiViewController: ContentViewController, context: Context) {
+        // Handle updates to your view controller if needed
     }
 }
+
+

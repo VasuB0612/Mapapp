@@ -91,7 +91,36 @@ class ContentViewController: UIViewController, MKMapViewDelegate, SavedLocations
             showSavedLocationsButton.widthAnchor.constraint(equalToConstant: 150),
             showSavedLocationsButton.heightAnchor.constraint(equalToConstant: 50)
         ])
+        
+        // A button to reset the stored locations.
+        let clearAllButton = UIButton(type: .system)
+        clearAllButton.setTitle("Clear All", for: .normal)
+        clearAllButton.translatesAutoresizingMaskIntoConstraints = false
+        clearAllButton.addTarget(self, action: #selector(didTapClearAllButton), for: .touchUpInside)
+        self.view.addSubview(clearAllButton)
+
+        // Set the background color to white with a bit of transparency
+        clearAllButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)  // Red for danger
+
+        // Set the corner radius to make the button rounded
+        clearAllButton.layer.cornerRadius = 10
+        clearAllButton.layer.masksToBounds = true
+
+        // Add Auto Layout constraints for the button
+        NSLayoutConstraint.activate([
+            clearAllButton.bottomAnchor.constraint(equalTo: showSavedLocationsButton.topAnchor, constant: -10),
+            clearAllButton.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            clearAllButton.widthAnchor.constraint(equalToConstant: 150),
+            clearAllButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
     }
+    
+    @objc func didTapClearAllButton() {
+            UserDefaults.standard.removeObject(forKey: savedLocationsKey)
+            mapView.removeAnnotations(mapView.annotations)
+            
+            print("All saved locations cleared.")
+        }
     
     @objc func didTapShowSavedLocationsButton() {
         let savedLocationsVC = SavedLocationsViewController()

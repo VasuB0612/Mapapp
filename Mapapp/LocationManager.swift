@@ -22,7 +22,6 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     
     func startLocationUpdates() {
         if CLLocationManager.locationServicesEnabled() {
-            print("Function called")
             locationManager.requestWhenInUseAuthorization()
             locationManager.startUpdatingLocation()
         }

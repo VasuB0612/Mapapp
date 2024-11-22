@@ -2,10 +2,22 @@ import SwiftUI
 import MapKit
 import CoreLocation
 
-class ContentViewController: UIViewController, MKMapViewDelegate {
+struct SavedLocation: Codable {
+    var latitude: Double
+    var longitude: Double
+    var title: String
+}
+
+import UIKit
+import MapKit
+import CoreLocation
+
+class ContentViewController: UIViewController, MKMapViewDelegate, SavedLocationsDelegate {
     var mapView: MKMapView!
     var locationManager: LocationManager
     var userLocation: CLLocation?
+    
+    private let savedLocationsKey = "savedLocations"
 
     // Initialize the LocationManager
     init(locationManager: LocationManager) {
@@ -24,12 +36,16 @@ class ContentViewController: UIViewController, MKMapViewDelegate {
         // Initialize map view
         mapView = MKMapView(frame: self.view.frame)
         mapView.delegate = self
+        mapView.showsUserLocation = true // Show the blue dot for user location
         self.view.addSubview(mapView)
-        
+
+        // Load and display saved annotations
+        loadSavedAnnotations()
+
         // Start location updates
         locationManager.locationUpdateHandler = { [weak self] location in
             self?.userLocation = location
-            self?.centerMapOnUserLocation()
+            self?.centerMapOnUserLocation() // Keep map centered on user location
         }
         locationManager.startLocationUpdates()
         
@@ -37,108 +53,162 @@ class ContentViewController: UIViewController, MKMapViewDelegate {
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(didTapMap(_:)))
         mapView.addGestureRecognizer(tapGesture)
         
-        // Create the "Locate Me" button
-        let locateMeButton = UIButton(type: .system)
-        locateMeButton.setTitle("Locate Me", for: .normal)
-        locateMeButton.translatesAutoresizingMaskIntoConstraints = false  // Enable Auto Layout
-        locateMeButton.addTarget(self, action: #selector(didTapLocateMeButton), for: .touchUpInside)
-        self.view.addSubview(locateMeButton)
+        // Create the "Locate Me" button (Airplane Button)
+        let airplaneButton = UIButton(type: .system)
+        let airplaneImage = UIImage(systemName: "location.fill")?.withTintColor(.systemBlue, renderingMode: .alwaysTemplate)
+        airplaneButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)
+        airplaneButton.layer.cornerRadius = 10
+        airplaneButton.setImage(airplaneImage, for: .normal)
+        airplaneButton.translatesAutoresizingMaskIntoConstraints = false
+        airplaneButton.addTarget(self, action: #selector(didTapAirplaneButton), for: .touchUpInside)
+        self.view.addSubview(airplaneButton)
         
-        locateMeButton.backgroundColor = .white
-        locateMeButton.layer.cornerRadius = 10
+        // Add Auto Layout constraints for the airplane button
+        NSLayoutConstraint.activate([
+            airplaneButton.topAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            airplaneButton.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            airplaneButton.widthAnchor.constraint(equalToConstant: 50),
+            airplaneButton.heightAnchor.constraint(equalToConstant: 50)
+        ])
+        
+        let showSavedLocationsButton = UIButton(type: .system)
+        showSavedLocationsButton.setTitle("Show Saved", for: .normal)
+        showSavedLocationsButton.translatesAutoresizingMaskIntoConstraints = false
+        showSavedLocationsButton.addTarget(self, action: #selector(didTapShowSavedLocationsButton), for: .touchUpInside)
+        self.view.addSubview(showSavedLocationsButton)
+
+        // Set the background color to white with a bit of transparency
+        showSavedLocationsButton.backgroundColor = UIColor.white.withAlphaComponent(0.8)  // 80% opacity
+
+        // Set the corner radius to make the button rounded
+        showSavedLocationsButton.layer.cornerRadius = 10
+        showSavedLocationsButton.layer.masksToBounds = true
         
         // Add Auto Layout constraints for the button
         NSLayoutConstraint.activate([
-            locateMeButton.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
-            locateMeButton.leadingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.leadingAnchor, constant: 20),
-            locateMeButton.widthAnchor.constraint(equalToConstant: 100),
-            locateMeButton.heightAnchor.constraint(equalToConstant: 50)
+            showSavedLocationsButton.bottomAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.bottomAnchor, constant: -20),
+            showSavedLocationsButton.trailingAnchor.constraint(equalTo: self.view.safeAreaLayoutGuide.trailingAnchor, constant: -20),
+            showSavedLocationsButton.widthAnchor.constraint(equalToConstant: 150),
+            showSavedLocationsButton.heightAnchor.constraint(equalToConstant: 50)
         ])
     }
     
-    @objc func didTapLocateMeButton() {
+    @objc func didTapShowSavedLocationsButton() {
+        let savedLocationsVC = SavedLocationsViewController()
+        savedLocationsVC.delegate = self // Set delegate to self (ContentViewController)
+        let navigationController = UINavigationController(rootViewController: savedLocationsVC)
+        self.present(navigationController, animated: true, completion: nil)
+    }
+    
+    // MARK: - SavedLocationsDelegate
+    func didSelectLocation(_ location: SavedLocation) {
+        let coordinate = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+        let region = MKCoordinateRegion(center: coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
+        mapView.setRegion(region, animated: true)
+    }
+    
+    func loadSavedAnnotations() {
+        if let savedLocations = loadLocations() {
+            for location in savedLocations {
+                let coordinate = CLLocationCoordinate2D(latitude: location.latitude, longitude: location.longitude)
+                let annotation = MKPointAnnotation()
+                annotation.coordinate = coordinate
+                annotation.title = location.title
+                mapView.addAnnotation(annotation)
+            }
+        }
+    }
+
+    func loadLocations() -> [SavedLocation]? {
+        if let savedData = UserDefaults.standard.data(forKey: savedLocationsKey) {
+            let decoder = JSONDecoder()
+            if let loadedLocations = try? decoder.decode([SavedLocation].self, from: savedData) {
+                return loadedLocations
+            }
+        }
+        return [] // Return an empty array instead of nil
+    }
+
+    func saveLocations(locations: [SavedLocation]) {
+        let encoder = JSONEncoder()
+        if let encoded = try? encoder.encode(locations) {
+            UserDefaults.standard.set(encoded, forKey: savedLocationsKey)
+        }
+    }
+
+    @objc func didTapAirplaneButton() {
         guard let location = userLocation else {
             print("User location is unavailable")
             return
         }
-        
+
         let region = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
         mapView.setRegion(region, animated: true)
     }
-    
+
     func centerMapOnUserLocation() {
         guard let location = userLocation else { return }
-        
+
         let region = MKCoordinateRegion(center: location.coordinate, latitudinalMeters: 1000, longitudinalMeters: 1000)
         mapView.setRegion(region, animated: true)
     }
-    
+
     @objc func didTapMap(_ sender: UITapGestureRecognizer) {
         let touchLocation = sender.location(in: mapView)
         let mapCoordinate = mapView.convert(touchLocation, toCoordinateFrom: mapView)
         showNameLocationAlert(at: mapCoordinate)
     }
-    
+
     func showNameLocationAlert(at coordinate: CLLocationCoordinate2D) {
         let alertController = UIAlertController(title: "Name this Location", message: nil, preferredStyle: .alert)
         alertController.addTextField { textField in
             textField.placeholder = "Enter location name"
         }
-        
+
         let cancelAction = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
         let saveAction = UIAlertAction(title: "Save", style: .default) { _ in
             if let name = alertController.textFields?.first?.text, !name.isEmpty {
                 self.addAnnotation(at: coordinate, withName: name)
             }
         }
-        
+
         alertController.addAction(cancelAction)
         alertController.addAction(saveAction)
-        
+
         present(alertController, animated: true, completion: nil)
     }
-    
+
     func addAnnotation(at coordinate: CLLocationCoordinate2D, withName name: String) {
         let annotation = MKPointAnnotation()
         annotation.coordinate = coordinate
         annotation.title = name
         mapView.addAnnotation(annotation)
+
+        // Create the SavedLocation object
+        let newLocation = SavedLocation(latitude: coordinate.latitude, longitude: coordinate.longitude, title: name)
+        
+        // Load existing locations
+        var savedLocations = loadLocations() ?? []
+        
+        // Append the new location
+        savedLocations.append(newLocation)
+        
+        // Save to UserDefaults
+        saveLocations(locations: savedLocations)
     }
-    
+
     func mapView(_ mapView: MKMapView, viewFor annotation: MKAnnotation) -> MKAnnotationView? {
         if annotation is MKPointAnnotation {
             let annotationView = mapView.dequeueReusableAnnotationView(withIdentifier: "Pin") ??
                 MKPinAnnotationView(annotation: annotation, reuseIdentifier: "Pin")
-            
+
             if let pinAnnotationView = annotationView as? MKPinAnnotationView {
                 pinAnnotationView.canShowCallout = true
                 pinAnnotationView.pinTintColor = UIColor.blue
             }
-            
+
             return annotationView
         }
         return nil
-    }
-}
-
-struct ContentView: UIViewControllerRepresentable {
-    
-    func makeUIViewController(context: Context) -> ContentViewController {
-        // Create LocationManager instance
-        let locationManager = LocationManager()
-        
-        // Create and return the ContentViewController with LocationManager
-        return ContentViewController(locationManager: locationManager)
-    }
-    
-    func updateUIViewController(_ uiViewController: ContentViewController, context: Context) {
-        // No need to update the view controller in this case
-    }
-}
-
-struct ContentView_Previews: PreviewProvider {
-    static var previews: some View {
-        ContentView()
-            .previewDevice("iPhone 12") // Optional: Set the preview device
     }
 }
